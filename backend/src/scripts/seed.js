@@ -40,7 +40,7 @@ const seedDatabase = async () => {
       collegeId: '24CS088',
       phone: '+91 98765 43210',
       accountStatus: 'active',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+      avatar: null,
     });
 
     const staff = await User.create({
@@ -52,7 +52,7 @@ const seedDatabase = async () => {
       collegeId: 'STF-CHARUSAT-102',
       phone: '+91 98765 12345',
       accountStatus: 'active',
-      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+      avatar: null,
     });
 
     const admin = await User.create({
@@ -64,7 +64,7 @@ const seedDatabase = async () => {
       collegeId: 'ADM-CHARUSAT-001',
       phone: '+91 99000 88000',
       accountStatus: 'active',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300',
+      avatar: null,
     });
 
     console.log('Created Default User Accounts:');
@@ -140,7 +140,7 @@ const seedDatabase = async () => {
       generalLocation: 'Engineering Hall Auditorium B',
       storageLocation: 'Faculty Office Cupboard 2',
       status: 'in_custody',
-      images: ['https://images.unsplash.com/photo-1611125832047-1d7ad1e8e49d?auto=format&fit=crop&q=80&w=600'],
+      images: ['https://images.unsplash.com/photo-1516201580490-33550d32de5c?auto=format&fit=crop&q=80&w=600'],
     });
 
     const found3 = await FoundItem.create({

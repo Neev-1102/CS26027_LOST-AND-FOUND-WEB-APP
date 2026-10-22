@@ -61,7 +61,7 @@ export const adminService = {
         role: 'staff',
         department: staffData.department || 'Campus Security & Lost Property Desk',
         status: 'Active',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
         createdAt: new Date().toISOString(),
       };
       users.unshift(newStaff);
@@ -72,7 +72,7 @@ export const adminService = {
 
   updateUser: async (id, userData) => {
     try {
-      const response = await api.patch(`/admin/users/${id}`, userData);
+      const response = await api.post ? await api.patch(`/admin/users/${id}`, userData) : await api.patch(`/admin/users/${id}`, userData);
       return response.data;
     } catch (err) {
       if (err.response?.data?.message) throw new Error(err.response.data.message);
@@ -84,6 +84,16 @@ export const adminService = {
       }
       return { success: true, user: users[idx] };
     }
+  },
+
+  updateUserStatus: async (id, status) => {
+    const accountStatus = status.toLowerCase() === 'active' ? 'active' : 'inactive';
+    return adminService.updateUser(id, { accountStatus });
+  },
+
+  updateUserRole: async (id, role) => {
+    const targetRole = role.toLowerCase() === 'faculty' ? 'staff' : role.toLowerCase();
+    return adminService.updateUser(id, { role: targetRole });
   },
 
   deleteUser: async (id) => {
@@ -113,20 +123,10 @@ export const adminService = {
       return response.data;
     } catch {
       return {
-        categoryCounts: [
-          { _id: 'Electronics', count: 42 },
-          { _id: 'ID Cards', count: 35 },
-          { _id: 'Keys & Fobs', count: 18 },
-          { _id: 'Bags & Backpacks', count: 14 },
-          { _id: 'Accessories', count: 11 },
-        ],
-        monthlyTrends: [
-          { _id: '2026-06', foundCount: 12, returnedCount: 5 },
-          { _id: '2026-07', foundCount: 18, returnedCount: 9 },
-          { _id: '2026-08', foundCount: 25, returnedCount: 14 },
-          { _id: '2026-09', foundCount: 22, returnedCount: 12 },
-          { _id: '2026-10', foundCount: 30, returnedCount: 18 },
-        ],
+        categoryCounts: [],
+        byCategory: [],
+        lostVsFound: [],
+        monthlyTrends: [],
       };
     }
   },
@@ -134,9 +134,9 @@ export const adminService = {
   getCategories: async () => {
     try {
       const response = await api.get('/admin/categories');
-      return response.data;
+      return response.data?.categories || response.data || [];
     } catch {
-      return { categories: CATEGORIES };
+      return CATEGORIES;
     }
   },
 

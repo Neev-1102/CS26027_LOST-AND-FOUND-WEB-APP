@@ -2,23 +2,29 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Calendar, Tag, ShieldCheck, ArrowRight, Sparkles, ExternalLink } from 'lucide-react';
 import AIMatchScore, { getScoreMetadata } from './AIMatchScore';
+import { getItemImage } from '../../utils/itemImageHelper';
 
 const AIMatchCard = ({ match, onClaim, onViewDetails }) => {
   if (!match) return null;
 
-  const {
-    id,
-    foundItemId,
-    foundItemTitle,
-    foundItemImage,
+  const id = match.id || match._id || `match_${match.foundItem?._id}`;
+  const foundItem = match.foundItem || {};
+  const foundItemId = match.foundItemId || foundItem._id || foundItem.id;
+  const foundItemTitle = match.foundItemTitle || foundItem.internalItemName || foundItem.itemName || foundItem.title || 'Found Property';
+  const category = match.category || foundItem.category || 'General';
+  const foundItemImage = getItemImage({
+    ...foundItem,
+    title: foundItemTitle,
     category,
-    score = 85,
-    location,
-    dateFound,
-    color,
-    brand,
-    factors = {}
-  } = match;
+    image: match.foundItemImage || foundItem.image,
+    images: match.foundItemImage ? [match.foundItemImage] : foundItem.images,
+  });
+  const score = match.score || match.matchScore || 85;
+  const location = match.location || foundItem.generalLocation || foundItem.locationLost || foundItem.location;
+  const dateFound = match.dateFound || foundItem.dateFound || foundItem.date;
+  const color = match.color || foundItem.color;
+  const brand = match.brand || foundItem.brand;
+  const factors = match.factors || {};
 
   const meta = getScoreMetadata(score);
 
@@ -42,11 +48,11 @@ const AIMatchCard = ({ match, onClaim, onViewDetails }) => {
         <div className="flex gap-4 items-start mb-4">
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 border border-slate-200/60">
             <img
-              src={foundItemImage || 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400'}
+              src={foundItemImage}
               alt={foundItemTitle}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               onError={(e) => {
-                e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400';
+                e.target.src = foundItemImage;
               }}
             />
           </div>

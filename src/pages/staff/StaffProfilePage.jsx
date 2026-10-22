@@ -5,6 +5,7 @@ import { authService } from '../../services/authService';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { User, Mail, Phone, Building, Save } from 'lucide-react';
+import { getInitials } from '../../utils/userHelper';
 
 const StaffProfilePage = () => {
   const { user, setUser } = useAuth();
@@ -38,11 +39,9 @@ const StaffProfilePage = () => {
 
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
         <div className="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
-          <img
-            src={user?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300'}
-            alt=""
-            className="w-16 h-16 rounded-2xl object-cover ring-4 ring-emerald-50"
-          />
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-extrabold text-xl flex items-center justify-center shadow-sm tracking-wider shrink-0">
+            {getInitials(user?.name)}
+          </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900">{user?.name}</h2>
             <p className="text-xs text-slate-500">{user?.email}</p>

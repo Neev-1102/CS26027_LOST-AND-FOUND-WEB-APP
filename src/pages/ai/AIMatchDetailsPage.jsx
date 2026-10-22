@@ -76,7 +76,12 @@ const AIMatchDetailsPage = () => {
     );
   }
 
-  const meta = getScoreMetadata(match.score);
+  const scoreValue = match.score || match.matchScore || 85;
+  const meta = getScoreMetadata(scoreValue);
+  const foundItem = match.foundItem || {};
+  const lostItem = match.lostItem || {};
+  const foundTitle = match.foundItemTitle || foundItem.internalItemName || foundItem.itemName || foundItem.title || 'Found Property';
+  const lostTitle = match.lostItemTitle || lostItem.itemName || lostItem.title || 'Reported Lost Item';
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -93,7 +98,7 @@ const AIMatchDetailsPage = () => {
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-400 font-mono">Report ID: {match.id}</span>
+            <span className="text-xs text-slate-400 font-mono">Report ID: {match.id || match._id}</span>
           </div>
         </div>
 
@@ -106,18 +111,18 @@ const AIMatchDetailsPage = () => {
                   {meta.label} Match
                 </span>
                 <span className="text-xs text-slate-400">•</span>
-                <span className="text-xs font-medium text-slate-500">Confidence: {match.confidenceLevel || 'Very Strong'}</span>
+                <span className="text-xs font-medium text-slate-500">Confidence: {match.confidenceLevel || match.confidence || 'Strong'}</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                {match.score}% Visual Similarity Match
+                {scoreValue}% Visual Similarity Match
               </h1>
               <p className="text-xs sm:text-sm text-slate-600">
-                Comparing <strong>{match.lostItemTitle || 'Your Lost Item'}</strong> with discovered item <strong>{match.foundItemTitle}</strong>
+                Comparing <strong>{lostTitle}</strong> with discovered item <strong>{foundTitle}</strong>
               </p>
             </div>
 
             <div className="flex-shrink-0">
-              <AIMatchScore score={match.score} size="lg" showBadge={false} />
+              <AIMatchScore score={scoreValue} size="lg" showBadge={false} />
             </div>
           </div>
 

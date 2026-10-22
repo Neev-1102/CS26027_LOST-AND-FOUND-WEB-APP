@@ -8,7 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 4000,
 });
 
 // Attach Authorization Bearer token to outgoing requests if logged in

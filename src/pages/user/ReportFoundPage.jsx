@@ -5,6 +5,7 @@ import { foundItemService } from '../../services/foundItemService';
 import { useToast } from '../../context/ToastContext';
 import ImageUploader from '../../components/common/ImageUploader';
 import { CATEGORIES, LOCATIONS } from '../../data/mockData';
+import { getDefaultItemImage } from '../../utils/itemImageHelper';
 import { 
   CheckCircle2, 
   Send, 
@@ -44,6 +45,7 @@ const ReportFoundPage = () => {
   const onSubmit = async (formData) => {
     try {
       const fullDescription = `${formData.description}\n\nAdditional Details: ${formData.additionalDetails || 'Turned in to campus staff/security.'}`;
+      const itemPhoto = imagePreview || getDefaultItemImage(formData.name, formData.category);
 
       const created = await foundItemService.create({
         name: formData.name,
@@ -55,7 +57,8 @@ const ReportFoundPage = () => {
         color: formData.color || 'Unspecified',
         brand: formData.brand || 'N/A',
         description: fullDescription,
-        image: imagePreview || 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800',
+        image: itemPhoto,
+        images: [itemPhoto],
         imagePreview
       });
 

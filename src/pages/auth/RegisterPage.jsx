@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,8 @@ import {
   UserPlus,
   Search,
   Building,
+  AlertCircle,
+  ArrowRight,
 } from 'lucide-react';
 import Button from '../../components/common/Button';
 
@@ -19,6 +21,7 @@ const RegisterPage = () => {
   const { register: registerAuth } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [regError, setRegError] = useState(null);
 
   const {
     register,
@@ -40,20 +43,23 @@ const RegisterPage = () => {
   const passwordWatch = watch('password');
 
   const onSubmit = async (formData) => {
+    setRegError(null);
     try {
       await registerAuth({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        collegeId: formData.studentId,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: (formData.phone || '').trim(),
+        collegeId: (formData.studentId || '').trim(),
         department: formData.department,
-        password: formData.password,
+        password: formData.password.trim(),
       });
 
       showToast('Student account registered successfully! Welcome to CampusFind.', 'success');
       navigate('/student/dashboard');
     } catch (err) {
-      showToast(err.message || 'Registration failed. Please verify your details.', 'error');
+      const msg = err.message || 'Registration failed. Please verify your details.';
+      setRegError(msg);
+      showToast(msg, 'error');
     }
   };
 
@@ -78,6 +84,39 @@ const RegisterPage = () => {
             (Staff and Admin accounts are provisioned via administrative operations).
           </p>
         </div>
+
+        {/* Error Alert Box */}
+        {regError && (
+          <div className="mb-5 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-2 animate-fadeIn">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold text-rose-950">Registration Notice</p>
+                <p className="mt-0.5 text-rose-800">{regError}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRegError(null)}
+                className="text-rose-400 hover:text-rose-700 text-sm font-bold leading-none p-1"
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+            {regError.toLowerCase().includes('already exists') && (
+              <div className="pt-1.5 border-t border-rose-200/70 flex items-center justify-between gap-2">
+                <span className="text-[11px] text-rose-700">Already registered with this college email?</span>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-xs transition-colors"
+                >
+                  <span>Go to Login</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Register Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

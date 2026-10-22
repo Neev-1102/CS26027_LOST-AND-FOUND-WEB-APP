@@ -9,6 +9,7 @@ import foundItemRoutes from './routes/foundItemRoutes.js';
 import claimRoutes from './routes/claimRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import aiMatchRoutes from './routes/aiMatchRoutes.js';
 
 import { errorHandler } from './middleware/errorHandler.js';
 import { upload } from './middleware/uploadMiddleware.js';
@@ -79,6 +80,7 @@ app.use('/api/found-items', foundItemRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai-matches', aiMatchRoutes);
 
 // 404 Route Handler
 app.use('*', (req, res) => {

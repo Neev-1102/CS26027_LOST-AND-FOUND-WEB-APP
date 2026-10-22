@@ -1,9 +1,36 @@
 import api from './api';
 import { INITIAL_FOUND_ITEMS } from '../data/mockData';
+import { getItemImage, getDefaultItemImage } from '../utils/itemImageHelper';
 
 const getMockFoundItems = () => {
   const saved = localStorage.getItem('campusfind_found_items');
-  return saved ? JSON.parse(saved) : INITIAL_FOUND_ITEMS;
+  let items = saved ? JSON.parse(saved) : INITIAL_FOUND_ITEMS;
+  let changed = false;
+
+  // Auto-heal items with proper photos matching item names
+  items = items.map((item) => {
+    const fixedImg = getItemImage(item);
+    const currImg = (item.images && item.images.length > 0) ? item.images[0] : (item.image || '');
+    if (currImg !== fixedImg) {
+      changed = true;
+      return {
+        ...item,
+        image: fixedImg,
+        images: [fixedImg],
+      };
+    }
+    return item;
+  });
+
+  if (changed && saved) {
+    try {
+      localStorage.setItem('campusfind_found_items', JSON.stringify(items));
+    } catch {
+      // storage quota or error
+    }
+  }
+
+  return items;
 };
 
 const saveMockFoundItems = (items) => {
@@ -72,11 +99,17 @@ export const foundItemService = {
       const items = getMockFoundItems();
       const user = JSON.parse(localStorage.getItem('campusfind_user') || '{}');
 
+      const title = itemData.internalItemName || itemData.title || itemData.name;
+      const defaultImg = getDefaultItemImage(title, itemData.category);
+      const chosenImages = (itemData.images && itemData.images.length > 0)
+        ? itemData.images
+        : (itemData.image ? [itemData.image] : [defaultImg]);
+
       const newItem = {
         _id: 'fnd_' + Date.now(),
         id: 'fnd_' + Date.now(),
-        internalItemName: itemData.internalItemName || itemData.title,
-        title: itemData.internalItemName || itemData.title,
+        internalItemName: title,
+        title: title,
         category: itemData.category,
         internalDescription: itemData.internalDescription || itemData.description,
         description: itemData.internalDescription || itemData.description,
@@ -88,8 +121,8 @@ export const foundItemService = {
         location: itemData.generalLocation || itemData.location,
         storageLocation: itemData.storageLocation || 'Security Desk',
         status: 'in_custody',
-        images: itemData.images || ['https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600'],
-        image: itemData.images?.[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600',
+        images: chosenImages,
+        image: chosenImages[0] || defaultImg,
         registeredBy: user,
         createdAt: new Date().toISOString(),
       };

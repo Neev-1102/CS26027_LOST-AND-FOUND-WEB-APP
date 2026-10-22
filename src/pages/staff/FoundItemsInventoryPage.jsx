@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import Button from '../../components/common/Button';
 import { PlusCircle, Search, Lock, PackageCheck } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
+import { getItemImage } from '../../utils/itemImageHelper';
 
 const FoundItemsInventoryPage = () => {
   const [items, setItems] = useState([]);
@@ -44,7 +45,7 @@ const FoundItemsInventoryPage = () => {
       render: (row) => (
         <div className="flex items-center gap-3">
           <img
-            src={row.images?.[0] || row.image || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=800'}
+            src={getItemImage(row)}
             alt=""
             className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-100"
           />

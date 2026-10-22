@@ -17,8 +17,16 @@ import { authorizeRole } from '../middleware/authorizeRole.js';
 
 const router = express.Router();
 
-// Strict Admin-only middleware applied to all routes in this router
-router.use(authenticate, authorizeRole('admin'));
+router.use(authenticate);
+
+// Staff & Admin can view audit logs
+router.get('/audit-logs', authorizeRole('admin', 'staff'), getAuditLogs);
+
+// Any authenticated user can view categories for item reporting
+router.get('/categories', getAllCategories);
+
+// Strict Admin-only management endpoints
+router.use(authorizeRole('admin'));
 
 router.get('/dashboard', getDashboardStats);
 router.get('/users', getAllUsers);
@@ -26,11 +34,9 @@ router.post('/staff', createStaffAccount);
 router.patch('/users/:id', updateUser);
 router.delete('/users/:id', deleteUser);
 
-router.get('/audit-logs', getAuditLogs);
 router.get('/analytics', getAnalytics);
 
-// Category Management
-router.get('/categories', getAllCategories);
+// Admin Category Management
 router.post('/categories', createCategory);
 router.patch('/categories/:id', updateCategory);
 router.delete('/categories/:id', deleteCategory);

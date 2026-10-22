@@ -2,14 +2,33 @@ import api from './api';
 import { INITIAL_USERS } from '../data/mockData';
 
 const getMockUsers = () => {
-  const saved = localStorage.getItem('campusfind_mock_users');
-  return saved ? JSON.parse(saved) : INITIAL_USERS;
+  try {
+    const saved = localStorage.getItem('campusfind_mock_users');
+    if (!saved) return INITIAL_USERS;
+    const parsed = JSON.parse(saved);
+    const merged = [...parsed];
+    INITIAL_USERS.forEach((initUser) => {
+      if (!merged.some((u) => u.email.toLowerCase() === initUser.email.toLowerCase())) {
+        merged.unshift(initUser);
+      }
+    });
+    return merged;
+  } catch {
+    return INITIAL_USERS;
+  }
 };
 
 export const authService = {
   login: async (email, password, role) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+
     try {
-      const response = await api.post('/auth/login', { email, password, role });
+      const response = await api.post('/auth/login', {
+        email: cleanEmail,
+        password: cleanPassword,
+        role,
+      });
       const authData = response.data;
       if (authData.token) {
         localStorage.setItem('campusfind_token', authData.token);
@@ -21,18 +40,22 @@ export const authService = {
         throw new Error(err.response.data.message);
       }
 
-      // Mock Fallback
+      // Mock Fallback when backend is unavailable or offline
       const users = getMockUsers();
-      const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      const user = users.find((u) => u.email.toLowerCase() === cleanEmail);
 
       if (!user) {
-        throw new Error('Invalid college email or password');
+        throw new Error('Invalid college email or password. Please verify your credentials or register a new account.');
+      }
+
+      if (user.password && user.password !== cleanPassword) {
+        throw new Error('Invalid email or password.');
       }
 
       const userRole = user.role === 'faculty' ? 'staff' : user.role;
       const requestedRole = role === 'faculty' ? 'staff' : role;
       if (role && userRole !== requestedRole) {
-        throw new Error(`Role mismatch: Registered as '${user.role.toUpperCase()}', but '${role.toUpperCase()}' was selected.`);
+        throw new Error(`Role mismatch: This account is registered as '${user.role.toUpperCase()}', but '${role.toUpperCase()}' was selected.`);
       }
 
       const mockToken = 'mock_jwt_token_' + Math.random().toString(36).substring(2);
@@ -65,7 +88,7 @@ export const authService = {
         studentId: googleData.email.split('@')[0].toUpperCase(),
         department: 'Google Authenticated User',
         status: 'Active',
-        avatar: googleData.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
       };
       const mockToken = 'mock_jwt_token_google_' + Date.now();
       localStorage.setItem('campusfind_token', mockToken);
@@ -101,7 +124,7 @@ export const authService = {
         studentId: userData.studentId || userData.collegeId || 'STU-' + Math.floor(1000 + Math.random() * 9000),
         department: userData.department || 'General Studies',
         status: 'Active',
-        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
         createdAt: new Date().toISOString(),
       };
 

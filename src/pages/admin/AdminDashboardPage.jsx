@@ -17,7 +17,7 @@ import {
   TrendingUp,
   BarChart3,
   PieChart as PieIcon,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 import {
   BarChart,
@@ -32,13 +32,15 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
 } from 'recharts';
+import { formatDate } from '../../utils/formatters';
 
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#64748b'];
 
 const AdminDashboardPage = () => {
   const [analytics, setAnalytics] = useState(null);
+  const [statsData, setStatsData] = useState(null);
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,12 +48,21 @@ const AdminDashboardPage = () => {
     const fetchAdminOverview = async () => {
       setLoading(true);
       try {
-        const data = await adminService.getAnalytics('30d');
-        const claimList = await claimService.getAllClaims();
-        setAnalytics(data);
-        setClaims(claimList.filter(c => c.status === 'Pending' || c.status === 'Under Review'));
+        const [analyticsRes, claimList, statsRes] = await Promise.all([
+          adminService.getAnalytics(),
+          claimService.getAllClaims(),
+          adminService.getStats(),
+        ]);
+        setAnalytics(analyticsRes);
+        setStatsData(statsRes?.stats || null);
+        const allClaims = Array.isArray(claimList) ? claimList : [];
+        setClaims(
+          allClaims.filter(
+            (c) => c.status === 'pending' || c.status === 'under_review'
+          )
+        );
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load admin dashboard data:', err);
       } finally {
         setLoading(false);
       }
@@ -61,92 +72,108 @@ const AdminDashboardPage = () => {
 
   if (loading) return <LoadingSkeleton type="details" />;
 
-  const stats = analytics?.overview || {
-    totalUsers: 5420,
-    lostItems: 1250,
-    foundItems: 980,
-    pendingClaims: 45,
-    recoveredItems: 720,
-    recoveryRate: 73.5
+  const stats = {
+    totalUsers: statsData?.totalUsers ?? analytics?.overview?.totalUsers ?? 0,
+    lostItems: statsData?.totalLost ?? analytics?.overview?.lostItems ?? 0,
+    foundItems: statsData?.totalFound ?? analytics?.overview?.foundItems ?? 0,
+    pendingClaims: statsData?.totalClaims ?? analytics?.overview?.pendingClaims ?? 0,
+    recoveredItems: statsData?.returnedCount ?? analytics?.overview?.recoveredItems ?? 0,
+    recoveryRate: statsData?.recoveryRate ?? analytics?.overview?.recoveryRate ?? 0,
   };
 
-  const lostVsFound = analytics?.lostVsFound || [
-    { month: 'Mar', lost: 45, found: 38, recovered: 28 },
-    { month: 'Apr', lost: 52, found: 42, recovered: 34 },
-    { month: 'May', lost: 68, found: 55, recovered: 42 },
-    { month: 'Jun', lost: 30, found: 25, recovered: 20 },
-    { month: 'Jul', lost: 24, found: 18, recovered: 15 },
-    { month: 'Aug', lost: 88, found: 74, recovered: 58 }
+  const lostVsFound = analytics?.lostVsFound?.length > 0 ? analytics.lostVsFound : [
+    { month: 'Current', lost: stats.lostItems, found: stats.foundItems, recovered: stats.recoveredItems }
   ];
 
-  const byCategory = analytics?.byCategory || [
-    { name: 'Electronics', value: 42 },
-    { name: 'ID Cards', value: 68 },
-    { name: 'Accessories', value: 35 },
-    { name: 'Books', value: 31 },
-    { name: 'Bags', value: 24 },
-    { name: 'Keys', value: 19 }
+  const byCategory = analytics?.byCategory?.length > 0 ? analytics.byCategory : [
+    { name: 'General', value: stats.foundItems || 1 }
   ];
 
+  const claimStatusCounts = statsData?.claimsByStatus || {};
   const claimStats = [
-    { status: 'Approved', count: 142, fill: '#10b981' },
-    { status: 'Under Review', count: 28, fill: '#3b82f6' },
-    { status: 'Pending', count: 18, fill: '#f59e0b' },
-    { status: 'Rejected', count: 12, fill: '#ef4444' }
+    { status: 'Completed', count: claimStatusCounts.completed || 0, fill: '#10b981' },
+    { status: 'Approved', count: claimStatusCounts.approved || 0, fill: '#6366f1' },
+    { status: 'Under Review', count: claimStatusCounts.under_review || 0, fill: '#3b82f6' },
+    { status: 'Pending', count: claimStatusCounts.pending || 0, fill: '#f59e0b' },
+    { status: 'Rejected', count: claimStatusCounts.rejected || 0, fill: '#ef4444' },
   ];
 
   return (
     <div className="space-y-8">
-      
-      {/* Admin Stat Cards (Section 39) */}
+      {/* Header Banner */}
+      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold uppercase tracking-wider border border-purple-500/30">
+            System Administration
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black mt-2">CampusFind Control Console</h1>
+          <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-xl">
+            Live operations oversight, security custody tracking, user authority management, and audit logs.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/admin/staff">
+            <Button variant="secondary" icon={ShieldCheck} className="bg-purple-600 text-white hover:bg-purple-700 border-none font-bold">
+              Provision Staff Account
+            </Button>
+          </Link>
+          <Link to="/admin/audit-logs">
+            <Button variant="outline" icon={Eye} className="text-white border-white/30 hover:bg-white/10 font-bold">
+              View Audit Logs
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Admin Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Users</p>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{stats.totalUsers.toLocaleString()}</h3>
-          <span className="text-[10px] text-emerald-600 font-semibold">+12% this term</span>
+          <span className="text-[10px] text-emerald-600 font-semibold">Registered database accounts</span>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Lost Items</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Lost Reports</p>
           <h3 className="text-xl sm:text-2xl font-black text-rose-600 mt-1">{stats.lostItems.toLocaleString()}</h3>
-          <span className="text-[10px] text-slate-400">Total reported</span>
+          <span className="text-[10px] text-slate-400">Total submitted</span>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Found Items</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Custody Items</p>
           <h3 className="text-xl sm:text-2xl font-black text-blue-600 mt-1">{stats.foundItems.toLocaleString()}</h3>
-          <span className="text-[10px] text-slate-400">In campus custody</span>
+          <span className="text-[10px] text-slate-400">Total found logged</span>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Claims</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Claims</p>
           <h3 className="text-xl sm:text-2xl font-black text-indigo-600 mt-1">{stats.pendingClaims}</h3>
-          <span className="text-[10px] text-amber-600 font-semibold">Awaiting review</span>
+          <span className="text-[10px] text-amber-600 font-semibold">Filed by students</span>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Returned Items</p>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Returned Property</p>
           <h3 className="text-xl sm:text-2xl font-black text-emerald-600 mt-1">{stats.recoveredItems}</h3>
-          <span className="text-[10px] text-emerald-600 font-semibold">{stats.recoveryRate}% rate</span>
+          <span className="text-[10px] text-emerald-600 font-semibold">{stats.recoveryRate}% recovery rate</span>
         </div>
 
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-soft">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">AI Matches</p>
-          <h3 className="text-xl sm:text-2xl font-black text-blue-600 mt-1">156</h3>
-          <span className="text-[10px] text-blue-600 font-semibold">Active suggestions</span>
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">System State</p>
+          <h3 className="text-xl sm:text-2xl font-black text-emerald-600 mt-1">Live</h3>
+          <span className="text-[10px] text-blue-600 font-semibold">MongoDB Synchronized</span>
         </div>
       </div>
 
-      {/* Recharts Analytics Row 1: Lost vs Found & Categories (Section 39) */}
+      {/* Recharts Analytics Row 1: Lost vs Found & Categories */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Lost vs Found Chart */}
         <div className="lg:col-span-8 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-soft space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-blue-600" />
-              <span>Lost vs Found Monthly Volume</span>
+              <span>Campus Lost vs Found Activity</span>
             </h3>
-            <span className="text-xs text-slate-400">Past 6 Months</span>
+            <span className="text-xs text-slate-400">Real-Time Database Aggregation</span>
           </div>
 
           <div className="h-64 w-full">
@@ -172,7 +199,7 @@ const AdminDashboardPage = () => {
               <PieIcon className="w-4 h-4 text-indigo-600" />
               <span>Item Categories</span>
             </h3>
-            <span className="text-xs text-slate-400">Breakdown</span>
+            <span className="text-xs text-slate-400">Distribution</span>
           </div>
 
           <div className="h-64 w-full">
@@ -206,9 +233,9 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-emerald-600" />
-              <span>Claim Verification Statistics</span>
+              <span>Claims Breakdown by Workflow State</span>
             </h3>
-            <span className="text-xs text-slate-400">By Status</span>
+            <span className="text-xs text-slate-400">Current Statuses</span>
           </div>
 
           <div className="h-56 w-full">
@@ -218,7 +245,7 @@ const AdminDashboardPage = () => {
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} />
                 <YAxis dataKey="status" type="category" tick={{ fontSize: 11, fill: '#64748b' }} axisLine={false} />
                 <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '11px' }} />
-                <Bar dataKey="count" name="Total Claims" radius={[0, 6, 6, 0]}>
+                <Bar dataKey="count" name="Claims" radius={[0, 6, 6, 0]}>
                   {claimStats.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
@@ -233,9 +260,9 @@ const AdminDashboardPage = () => {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-blue-600" />
-              <span>Monthly Platform Recovery Activity</span>
+              <span>Campus Recovery Trajectory</span>
             </h3>
-            <span className="text-xs text-slate-400">Success Trend</span>
+            <span className="text-xs text-slate-400">Resolution Trend</span>
           </div>
 
           <div className="h-56 w-full">
@@ -285,31 +312,41 @@ const AdminDashboardPage = () => {
                   </td>
                 </tr>
               ) : (
-                claims.map((claim) => (
-                  <tr key={claim.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="p-3 font-bold text-slate-900">
-                      {claim.claimant?.name} <span className="text-[10px] text-slate-400 font-normal">({claim.claimant?.studentId})</span>
-                    </td>
-                    <td className="p-3 font-medium text-slate-800 truncate max-w-xs">{claim.itemTitle}</td>
-                    <td className="p-3 font-medium text-slate-500">{claim.claimDate}</td>
-                    <td className="p-3">
-                      <StatusBadge status={claim.status} size="sm" />
-                    </td>
-                    <td className="p-3 text-right">
-                      <Link to="/admin/claims">
-                        <Button variant="primary" size="sm" icon={Eye}>
-                          Verify Claim
-                        </Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                claims.map((claim) => {
+                  const claimId = claim._id || claim.id;
+                  const item = claim.foundItem || {};
+                  return (
+                    <tr key={claimId} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="p-3 font-bold text-slate-900">
+                        {claim.claimant?.name || 'Student'}{' '}
+                        <span className="text-[10px] text-slate-400 font-normal">
+                          ({claim.claimant?.collegeId || claim.claimant?.studentId || 'ID'})
+                        </span>
+                      </td>
+                      <td className="p-3 font-medium text-slate-800 truncate max-w-xs">
+                        {item.internalItemName || item.title || claim.itemTitle || 'Found Item'}
+                      </td>
+                      <td className="p-3 font-medium text-slate-500">
+                        {formatDate(claim.createdAt || claim.claimDate)}
+                      </td>
+                      <td className="p-3">
+                        <StatusBadge status={claim.status} size="sm" />
+                      </td>
+                      <td className="p-3 text-right">
+                        <Link to={`/admin/claims`}>
+                          <Button variant="primary" size="sm" icon={Eye}>
+                            Inspect Claim
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 };

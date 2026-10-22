@@ -4,6 +4,7 @@ import AuditLog from '../models/AuditLog.js';
 import { ApiError, asyncHandler } from '../utils/ApiError.js';
 import { sendNotification } from '../services/notificationService.js';
 import { findPossibleMatches } from '../services/matchingService.js';
+import { getDefaultItemImage } from '../utils/itemImageHelper.js';
 
 // @desc    Register a found item (Staff/Admin only)
 // @route   POST /api/found-items
@@ -23,6 +24,7 @@ export const createFoundItem = asyncHandler(async (req, res) => {
     time,
     generalLocation,
     location,
+    locationFound,
     storageLocation,
     images,
     image,
@@ -30,15 +32,14 @@ export const createFoundItem = asyncHandler(async (req, res) => {
 
   const itemName = internalItemName || title || name;
   const itemDesc = internalDescription || description;
-  const itemLoc = generalLocation || location;
+  const itemLoc = generalLocation || location || locationFound;
   const itemDate = dateFound || date || new Date();
   const itemTime = approximateTime || time || '';
   const itemStorage = storageLocation || 'Security Desk (Turned in by student)';
   const itemImages = images || (image ? [image] : []);
 
-  if (!itemName || !category || !itemDesc || !itemLoc) {
-    throw new ApiError(400, 'Please provide item name, category, description, and location.');
-  }
+  const defaultPhoto = getDefaultItemImage(itemName, category);
+  const resolvedImages = (itemImages && itemImages.length > 0) ? itemImages : [defaultPhoto];
 
   const foundItem = await FoundItem.create({
     registeredBy: req.user._id,
@@ -51,7 +52,7 @@ export const createFoundItem = asyncHandler(async (req, res) => {
     approximateTime: itemTime,
     generalLocation: itemLoc,
     storageLocation: itemStorage,
-    images: itemImages,
+    images: resolvedImages,
     status: 'in_custody',
   });
 

@@ -54,7 +54,7 @@ const AdminCategoriesPage = () => {
 
     try {
       if (editCategory) {
-        await adminService.updateCategory(editCategory.id, { name: catName });
+        await adminService.updateCategory(editCategory._id || editCategory.id, { name: catName });
         showSuccess(`Category updated to "${catName}"`);
       } else {
         await adminService.createCategory({ name: catName });
@@ -70,7 +70,7 @@ const AdminCategoriesPage = () => {
   const handleDelete = async () => {
     if (!deleteCat) return;
     try {
-      await adminService.deleteCategory(deleteCat.id);
+      await adminService.deleteCategory(deleteCat._id || deleteCat.id);
       showSuccess(`Category "${deleteCat.name}" deleted`);
       setConfirmOpen(false);
       fetchCategories();
@@ -99,7 +99,7 @@ const AdminCategoriesPage = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((cat) => (
-          <div key={cat.id} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-soft flex items-center justify-between gap-4">
+          <div key={cat._id || cat.id || cat.name} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-soft flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold ${cat.color || 'bg-blue-50 text-blue-600'}`}>
                 <Box className="w-6 h-6" />

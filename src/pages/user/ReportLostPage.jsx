@@ -5,6 +5,7 @@ import { lostItemService } from '../../services/lostItemService';
 import { useToast } from '../../context/ToastContext';
 import ImageUploader from '../../components/common/ImageUploader';
 import { CATEGORIES, LOCATIONS } from '../../data/mockData';
+import { getDefaultItemImage } from '../../utils/itemImageHelper';
 import { 
   Package, 
   Send, 
@@ -52,6 +53,7 @@ const ReportLostPage = () => {
   const onSubmit = async (formData) => {
     try {
       const fullDescription = `${formData.description}\n\nIdentifying Features: ${formData.identifyingFeatures || 'None specified'}\nAdditional Notes: ${formData.additionalNotes || 'N/A'}`;
+      const itemPhoto = imagePreview || getDefaultItemImage(formData.name, formData.category);
 
       const created = await lostItemService.create({
         name: formData.name,
@@ -65,7 +67,8 @@ const ReportLostPage = () => {
         model: formData.model || '',
         serialNumber: formData.serialNumber || '',
         description: fullDescription,
-        image: imagePreview || 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800',
+        image: itemPhoto,
+        images: [itemPhoto],
         imagePreview
       });
 

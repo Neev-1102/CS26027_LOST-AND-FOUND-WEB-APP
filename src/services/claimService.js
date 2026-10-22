@@ -78,9 +78,24 @@ export const claimService = {
     }
   },
 
+  getAllClaims: async (params = {}) => {
+    try {
+      const response = await api.get('/claims/staff/all', { params });
+      return response.data?.claims || response.data || [];
+    } catch {
+      const claims = getMockClaims();
+      return claims;
+    }
+  },
+
+  updateClaimStatus: async (claimId, status, reviewRemark = '') => {
+    return claimService.reviewClaim(claimId, { status: status.toLowerCase().replace(/\s+/g, '_'), reviewRemark });
+  },
+
   reviewClaim: async (claimId, { status, reviewRemark }) => {
     try {
-      const response = await api.patch(`/claims/staff/${claimId}/review`, { status, reviewRemark });
+      const normalizedStatus = (status || '').toLowerCase().replace(/\s+/g, '_');
+      const response = await api.patch(`/claims/staff/${claimId}/review`, { status: normalizedStatus, reviewRemark });
       return response.data;
     } catch (err) {
       if (err.response?.data?.message) throw new Error(err.response.data.message);

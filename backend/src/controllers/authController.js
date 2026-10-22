@@ -53,8 +53,10 @@ export const login = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Please provide email and password.');
   }
 
+  const cleanEmail = email.trim().toLowerCase();
+
   // Find user and explicitly select passwordHash
-  const user = await User.findOne({ email: email.toLowerCase() }).select('+passwordHash');
+  const user = await User.findOne({ email: cleanEmail }).select('+passwordHash');
   if (!user) {
     throw new ApiError(401, 'Invalid email or password.');
   }

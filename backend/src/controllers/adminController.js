@@ -37,9 +37,12 @@ export const getDashboardStats = asyncHandler(async (req, res) => {
     stats: {
       totalUsers,
       totalLost,
+      lostItems: totalLost,
       totalFound,
+      foundItems: totalFound,
       totalClaims,
       returnedCount: returnedFound,
+      recoveredItems: returnedFound,
       recoveryRate,
       usersByRole: usersByRole.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
       claimsByStatus: claimsByStatus.reduce((acc, curr) => ({ ...acc, [curr._id]: curr.count }), {}),
@@ -208,7 +211,21 @@ export const getAuditLogs = asyncHandler(async (req, res) => {
 // @desc    Get analytics and recovery metrics
 // @route   GET /api/admin/analytics
 export const getAnalytics = asyncHandler(async (req, res) => {
-  const [categoryCounts, monthlyTrends] = await Promise.all([
+  const [
+    totalUsers,
+    lostItems,
+    foundItems,
+    pendingClaims,
+    recoveredItems,
+    categoryCounts,
+    monthlyTrendsFound,
+    monthlyTrendsLost,
+  ] = await Promise.all([
+    User.countDocuments(),
+    LostItem.countDocuments(),
+    FoundItem.countDocuments(),
+    Claim.countDocuments({ status: { $in: ['pending', 'under_review'] } }),
+    FoundItem.countDocuments({ status: 'returned' }),
     FoundItem.aggregate([
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
@@ -225,11 +242,61 @@ export const getAnalytics = asyncHandler(async (req, res) => {
       },
       { $sort: { _id: 1 } },
     ]),
+    LostItem.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } },
+          lostCount: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
   ]);
+
+  const recoveryRate = foundItems > 0 ? Math.round((recoveredItems / foundItems) * 100) : 0;
+
+  // Format byCategory for Recharts PieChart (support both count and value keys)
+  const byCategory = categoryCounts.map((c) => ({
+    name: c._id || 'General',
+    value: c.count,
+    count: c.count,
+  }));
+
+  // Build combined lostVsFound timeline
+  const monthsMap = new Map();
+  monthlyTrendsFound.forEach((f) => {
+    monthsMap.set(f._id, { month: f._id, found: f.foundCount, recovered: f.returnedCount, lost: 0 });
+  });
+  monthlyTrendsLost.forEach((l) => {
+    const existing = monthsMap.get(l._id) || { month: l._id, found: 0, recovered: 0, lost: 0 };
+    existing.lost = l.lostCount;
+    monthsMap.set(l._id, existing);
+  });
+
+  const lostVsFound = Array.from(monthsMap.values()).sort((a, b) => a.month.localeCompare(b.month));
+
+  // Build monthlyTrends for weekly/monthly activity line chart
+  const monthlyTrends = monthlyTrendsFound.map((m) => ({
+    day: m._id,
+    month: m._id,
+    reports: m.foundCount,
+    resolved: m.returnedCount,
+    claims: 0,
+  }));
 
   res.json({
     success: true,
+    overview: {
+      totalUsers,
+      lostItems,
+      foundItems,
+      pendingClaims,
+      recoveredItems,
+      recoveryRate,
+    },
     categoryCounts,
+    byCategory,
+    lostVsFound,
     monthlyTrends,
   });
 });

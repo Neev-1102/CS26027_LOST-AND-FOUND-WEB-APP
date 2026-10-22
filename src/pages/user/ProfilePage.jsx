@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 import { User, Mail, Phone, IdCard, Building, Lock, Edit3, ShieldCheck } from 'lucide-react';
+import { getInitials } from '../../utils/userHelper';
 
 const ProfilePage = () => {
   const { user, setUser } = useAuth();
@@ -18,7 +19,6 @@ const ProfilePage = () => {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [department, setDepartment] = useState(user?.department || 'Computer Science');
-  const [avatar, setAvatar] = useState(user?.avatar || '');
 
   // Password Form State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -31,7 +31,7 @@ const ProfilePage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const updated = await userService.updateProfile({ name, phone, department, avatar });
+      const updated = await userService.updateProfile({ name, phone, department });
       setUser(updated);
       showSuccess('Profile information updated successfully!');
       setEditModalOpen(false);
@@ -69,11 +69,9 @@ const ProfilePage = () => {
       {/* Profile Header Card */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-soft">
         <div className="flex flex-col sm:flex-row items-center gap-6">
-          <img
-            src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'}
-            alt={user?.name}
-            className="w-24 h-24 rounded-3xl object-cover ring-4 ring-blue-500/20 shadow-md"
-          />
+          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-3xl flex items-center justify-center shadow-md tracking-wider shrink-0">
+            {getInitials(user?.name)}
+          </div>
           <div className="text-center sm:text-left space-y-1 min-w-0 flex-1">
             <div className="flex items-center justify-center sm:justify-start gap-2">
               <h1 className="text-2xl font-black text-slate-900">{user?.name}</h1>
@@ -170,13 +168,6 @@ const ProfilePage = () => {
             icon={Building}
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-          />
-
-          <Input
-            label="Avatar Image URL"
-            value={avatar}
-            onChange={(e) => setAvatar(e.target.value)}
-            helperText="Enter direct image URL for profile photo"
           />
 
           <div className="pt-3 border-t border-slate-100 flex justify-end gap-3">

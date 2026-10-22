@@ -1,9 +1,36 @@
 import api from './api';
 import { INITIAL_LOST_ITEMS } from '../data/mockData';
+import { getItemImage, getDefaultItemImage } from '../utils/itemImageHelper';
 
 const getMockLostItems = () => {
   const saved = localStorage.getItem('campusfind_lost_items');
-  return saved ? JSON.parse(saved) : INITIAL_LOST_ITEMS;
+  let items = saved ? JSON.parse(saved) : INITIAL_LOST_ITEMS;
+  let changed = false;
+
+  // Auto-heal items with proper photos matching item names
+  items = items.map((item) => {
+    const fixedImg = getItemImage(item);
+    const currImg = (item.images && item.images.length > 0) ? item.images[0] : (item.image || '');
+    if (currImg !== fixedImg) {
+      changed = true;
+      return {
+        ...item,
+        image: fixedImg,
+        images: [fixedImg],
+      };
+    }
+    return item;
+  });
+
+  if (changed && saved) {
+    try {
+      localStorage.setItem('campusfind_lost_items', JSON.stringify(items));
+    } catch {
+      // storage error
+    }
+  }
+
+  return items;
 };
 
 const saveMockLostItems = (items) => {
@@ -86,11 +113,17 @@ export const lostItemService = {
       const items = getMockLostItems();
       const user = JSON.parse(localStorage.getItem('campusfind_user') || '{}');
 
+      const title = itemData.itemName || itemData.title || itemData.name;
+      const defaultImg = getDefaultItemImage(title, itemData.category);
+      const chosenImages = (itemData.images && itemData.images.length > 0)
+        ? itemData.images
+        : (itemData.image ? [itemData.image] : [defaultImg]);
+
       const newItem = {
         _id: 'lst_' + Date.now(),
         id: 'lst_' + Date.now(),
-        itemName: itemData.itemName || itemData.title,
-        title: itemData.itemName || itemData.title,
+        itemName: title,
+        title: title,
         category: itemData.category,
         description: itemData.description,
         color: itemData.color || 'Unspecified',
@@ -100,8 +133,8 @@ export const lostItemService = {
         locationLost: itemData.locationLost || itemData.location,
         location: itemData.locationLost || itemData.location,
         status: 'pending_review',
-        images: itemData.images || ['https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600'],
-        image: itemData.images?.[0] || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=600',
+        images: chosenImages,
+        image: chosenImages[0] || defaultImg,
         reportedBy: user,
         createdAt: new Date().toISOString(),
       };

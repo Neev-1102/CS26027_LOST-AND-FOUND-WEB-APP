@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import { getInitials } from '../../utils/userHelper';
 import {
   LayoutDashboard,
   PlusCircle,

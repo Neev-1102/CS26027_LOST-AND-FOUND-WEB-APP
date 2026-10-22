@@ -28,7 +28,7 @@ const seedData = async () => {
         department: 'Computer Engineering (CSPIT/DEPSTAR)',
         studentId: '24CS088',
         phone: '+91 98765 43210',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
         status: 'Active',
       },
       {
@@ -39,7 +39,7 @@ const seedData = async () => {
         department: 'Department of Computer Engineering',
         employeeId: 'FAC-CHARUSAT-102',
         phone: '+91 98765 12345',
-        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
         status: 'Active',
       },
       {
@@ -50,7 +50,7 @@ const seedData = async () => {
         department: 'CHARUSAT Campus Security & Student Affairs',
         employeeId: 'ADM-CHARUSAT-001',
         phone: '+91 99000 88000',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300',
+        avatar: null,
         status: 'Active',
       },
     ]);

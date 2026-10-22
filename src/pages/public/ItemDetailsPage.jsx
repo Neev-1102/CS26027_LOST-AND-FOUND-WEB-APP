@@ -10,6 +10,7 @@ import ClaimModal from '../../components/items/ClaimModal';
 import AIMatchCard from '../../components/ai/AIMatchCard';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import ErrorState from '../../components/common/ErrorState';
+import { getItemImage } from '../../utils/itemImageHelper';
 import {
   MapPin,
   Calendar,
@@ -27,15 +28,17 @@ import {
   PlusCircle,
   User,
   ExternalLink,
-  Layers
 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import { formatDate } from '../../utils/formatters';
 
 const ItemDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { showInfo, showSuccess } = useToast();
+  const toast = useToast();
+  const showInfo = toast?.showToast ? (m) => toast.showToast(m, 'info') : toast?.showInfo || console.log;
+  const showSuccess = toast?.showToast ? (m) => toast.showToast(m, 'success') : toast?.showSuccess || console.log;
 
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,17 +56,23 @@ const ItemDetailsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        let fetchedItem = null;
+        let fetchedData = null;
         if (isLostRoute) {
-          fetchedItem = await lostItemService.getById(id);
-          // Fetch potential AI matches
+          fetchedData = await lostItemService.getById(id);
           const matches = await aiMatchService.findAIMatches(id);
-          setPossibleMatches(matches.slice(0, 2));
+          setPossibleMatches(Array.isArray(matches) ? matches.slice(0, 2) : []);
         } else {
-          fetchedItem = await foundItemService.getById(id);
+          fetchedData = await foundItemService.getById(id);
         }
-        setItem(fetchedItem);
-        setSelectedGalleryImage(fetchedItem?.image || '');
+
+        const rawItem = fetchedData?.item || fetchedData;
+        if (!rawItem) {
+          throw new Error('Item report not found');
+        }
+
+        setItem(rawItem);
+        const initialImg = getItemImage(rawItem);
+        setSelectedGalleryImage(initialImg);
       } catch (err) {
         setError(err.message || 'Item details could not be loaded.');
       } finally {
@@ -75,8 +84,10 @@ const ItemDetailsPage = () => {
   }, [id, isLostRoute]);
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    showInfo('Item report link copied to clipboard!');
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      showInfo('Item report link copied to clipboard!');
+    }
   };
 
   if (loading) {
@@ -92,23 +103,25 @@ const ItemDetailsPage = () => {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <ErrorState
           title="Item Not Found"
-          description={error || "The requested item report does not exist or was removed."}
+          description={error || 'The requested item report does not exist or was removed.'}
           onRetry={() => navigate(isLostRoute ? '/lost-items' : '/found-items')}
         />
       </div>
     );
   }
 
-  // Create image gallery array (primary image + alternate angles)
-  const galleryImages = [
-    item.image,
-    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400',
-    'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=400'
-  ].filter(Boolean);
+  const itemId = item._id || item.id;
+  const itemTitle = item.itemName || item.internalItemName || item.title || 'Untitled Item';
+  const itemDesc = item.description || item.internalDescription || 'No description provided.';
+  const itemLocation = item.locationLost || item.generalLocation || item.location || 'Campus Grounds';
+  const itemDate = formatDate(item.dateLost || item.dateFound || item.date);
+
+  const galleryImages = (item.images && item.images.length > 0 && !item.images[0].includes('photo-1553062407-98eeb64c6a62'))
+    ? item.images
+    : [getItemImage(item)];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -119,16 +132,15 @@ const ItemDetailsPage = () => {
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
         {/* Left Column: Image & Gallery */}
         <div className="lg:col-span-6 space-y-4">
           <div className="relative rounded-3xl overflow-hidden border border-slate-200 bg-white shadow-soft h-96 sm:h-[420px]">
             <img
-              src={selectedGalleryImage || item.image}
-              alt={item.title}
+              src={selectedGalleryImage || galleryImages[0]}
+              alt={itemTitle}
               className="w-full h-full object-cover transition-all duration-300"
               onError={(e) => {
-                e.target.src = 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=800';
+                e.target.src = getItemImage(item);
               }}
             />
             <div className="absolute top-4 left-4 z-10">
@@ -144,41 +156,42 @@ const ItemDetailsPage = () => {
           </div>
 
           {/* Image Gallery Thumbnails */}
-          <div className="flex items-center gap-3">
-            {galleryImages.map((imgUrl, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setSelectedGalleryImage(imgUrl)}
-                className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                  selectedGalleryImage === imgUrl ? 'border-blue-600 ring-2 ring-blue-500/20' : 'border-slate-200 opacity-70 hover:opacity-100'
-                }`}
-              >
-                <img
-                  src={imgUrl}
-                  alt={`View angle ${idx + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+          {galleryImages.length > 1 && (
+            <div className="flex items-center gap-3">
+              {galleryImages.map((imgUrl, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setSelectedGalleryImage(imgUrl)}
+                  className={`relative w-20 h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedGalleryImage === imgUrl ? 'border-blue-600 ring-2 ring-blue-500/20' : 'border-slate-200 opacity-70 hover:opacity-100'
+                  }`}
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`View angle ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Metadata & Actions */}
         <div className="lg:col-span-6 space-y-6">
-          
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider">
               <Tag className="w-4 h-4" />
-              <span>{item.category}</span>
+              <span>{item.category || 'General'}</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              {item.title}
+              {itemTitle}
             </h1>
 
             <p className="text-slate-600 text-xs sm:text-sm leading-relaxed whitespace-pre-line">
-              {item.description}
+              {itemDesc}
             </p>
           </div>
 
@@ -188,21 +201,21 @@ const ItemDetailsPage = () => {
               <span className="text-slate-400 font-medium flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-blue-600" /> Location
               </span>
-              <span className="font-bold text-slate-900">{item.location}</span>
+              <span className="font-bold text-slate-900">{itemLocation}</span>
             </div>
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <span className="text-slate-400 font-medium flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-slate-400" /> Date Logged
               </span>
-              <span className="font-semibold text-slate-800">{item.date}</span>
+              <span className="font-semibold text-slate-800">{itemDate}</span>
             </div>
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <span className="text-slate-400 font-medium flex items-center gap-2">
                 <Clock className="w-4 h-4 text-slate-400" /> Approximate Time
               </span>
-              <span className="font-semibold text-slate-800">{item.time || '12:00 PM'}</span>
+              <span className="font-semibold text-slate-800">{item.approximateTime || item.time || 'General daytime'}</span>
             </div>
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -216,55 +229,57 @@ const ItemDetailsPage = () => {
               <span className="text-slate-400 font-medium flex items-center gap-2">
                 <Building className="w-4 h-4 text-slate-400" /> Brand / Model
               </span>
-              <span className="font-semibold text-slate-800">{item.brand || 'N/A'} {item.model ? `(${item.model})` : ''}</span>
+              <span className="font-semibold text-slate-800">{item.brand || 'N/A'}</span>
             </div>
 
             {/* Reporter Information */}
             <div className="flex items-center justify-between pt-1">
               <span className="text-slate-400 font-medium flex items-center gap-2">
-                <User className="w-4 h-4 text-slate-400" /> {isLostRoute ? 'Reported By' : 'Logged By'}
+                <User className="w-4 h-4 text-slate-400" /> {isLostRoute ? 'Reported By' : 'Custody Officer'}
               </span>
               <span className="font-semibold text-slate-800">
-                {item.reportedBy?.name || item.foundBy?.name || 'Verified Campus Member'}
+                {item.reportedBy?.name || item.registeredBy?.name || 'Authorized Campus Desk'}
               </span>
             </div>
           </div>
 
-          {/* Action Buttons as specified in Section 14:
-              - Report Similar Item
-              - Claim Item
-              - Contact
-              - Find Possible Matches */}
+          {/* Action Buttons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {/* Claim button */}
-            <button
-              type="button"
-              onClick={() => setClaimModalOpen(true)}
-              className="py-3 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-colors"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              <span>Claim This Item</span>
-            </button>
+            {!isLostRoute ? (
+              <Link
+                to={`/student/claim/${itemId}`}
+                className="py-3 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-colors"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Submit Ownership Claim</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setClaimModalOpen(true)}
+                className="py-3 px-4 rounded-xl font-bold text-xs text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 transition-colors"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>Found & Return This</span>
+              </button>
+            )}
 
-            {/* AI Matches button */}
             <Link
-              to={`/ai-matches?lostId=${item.id}`}
+              to={`/ai-matches?lostId=${itemId}`}
               className="py-3 px-4 rounded-xl font-bold text-xs text-slate-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-2 transition-colors"
             >
               <Sparkles className="w-4 h-4 text-blue-600" />
               <span>Find Possible Matches</span>
             </Link>
 
-            {/* Report Similar Item */}
             <Link
-              to={isLostRoute ? '/report/lost' : '/report/found'}
+              to="/student/report-lost"
               className="py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-700 bg-slate-100 hover:bg-slate-200 flex items-center justify-center gap-2 transition-colors"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Report Similar Item</span>
             </Link>
 
-            {/* Contact Security / Finder */}
             <button
               type="button"
               onClick={() => setContactModalOpen(true)}
@@ -281,13 +296,11 @@ const ItemDetailsPage = () => {
             <div className="text-xs text-blue-900">
               <p className="font-bold">Campus Security Custody Verification</p>
               <p className="text-blue-700 mt-0.5">
-                All claims are independently verified before custody transfer. Please have your Student or Faculty ID ready upon claim approval.
+                All claims are independently verified before custody transfer. Please have your Student or Institutional ID ready upon claim approval.
               </p>
             </div>
           </div>
-
         </div>
-
       </div>
 
       {/* Suggested AI Matches Section */}
@@ -299,7 +312,7 @@ const ItemDetailsPage = () => {
               <h3 className="text-lg font-bold text-slate-900">AI Visual Similarity Matches</h3>
             </div>
             <Link
-              to={`/ai-matches?lostId=${item.id}`}
+              to={`/ai-matches?lostId=${itemId}`}
               className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               <span>View all similarity scores</span>
@@ -310,9 +323,9 @@ const ItemDetailsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {possibleMatches.map((m) => (
               <AIMatchCard
-                key={m.id}
+                key={m.id || m.foundItem?._id}
                 match={m}
-                onClaim={() => setClaimModalOpen(true)}
+                onClaim={() => navigate(`/student/claim/${m.foundItem?._id || m.foundItemId}`)}
               />
             ))}
           </div>
@@ -326,7 +339,7 @@ const ItemDetailsPage = () => {
         item={item}
         onClaimSubmitted={() => {
           showSuccess('Claim submitted successfully! Track review status on your claims dashboard.');
-          navigate('/claims');
+          navigate('/student/my-claims');
         }}
       />
 
@@ -354,7 +367,7 @@ const ItemDetailsPage = () => {
               <PhoneCall className="w-4 h-4 text-blue-600 flex-shrink-0" />
               <div>
                 <p className="font-bold text-slate-800">Campus Security Helpline</p>
-                <p className="text-slate-500">+1 (555) 999-CAMPUS (Ext 104)</p>
+                <p className="text-slate-500">+91 99000 88000 (Room 104)</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -373,7 +386,6 @@ const ItemDetailsPage = () => {
           </div>
         </div>
       </Modal>
-
     </div>
   );
 };

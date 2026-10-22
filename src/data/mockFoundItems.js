@@ -126,7 +126,7 @@ export const INITIAL_FOUND_ITEMS = [
     model: 'TI-84 Plus CE',
     status: 'Found',
     description: 'Left on row 4 seat 12. Screen has protective slide cover attached. Turned in to Block C lost box.',
-    image: 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1516201580490-33550d32de5c?auto=format&fit=crop&q=80&w=800',
     foundBy: { id: 'usr_10', name: 'Officer John Martinez', email: 'j.martinez@campusfind.edu' },
     matchedLostId: 'lost_14',
     matchScore: 91,

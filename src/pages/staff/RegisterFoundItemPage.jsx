@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { foundItemService } from '../../services/foundItemService';
 import { useToast } from '../../context/ToastContext';
 import { CATEGORIES, LOCATIONS } from '../../data/mockData';
+import { getDefaultItemImage } from '../../utils/itemImageHelper';
 import ItemImageUploader from '../../components/items/ItemImageUploader';
 import Button from '../../components/common/Button';
 import { PackageCheck, ArrowLeft, ShieldCheck, Lock } from 'lucide-react';
@@ -35,9 +36,12 @@ const RegisterFoundItemPage = () => {
   const onSubmit = async (data) => {
     setSubmitting(true);
     try {
+      const defaultImg = getDefaultItemImage(data.internalItemName, data.category);
+      const chosenImages = (images && images.length > 0) ? images : [defaultImg];
       const payload = {
         ...data,
-        images,
+        images: chosenImages,
+        image: chosenImages[0],
       };
 
       await foundItemService.create(payload);

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Calendar, ArrowRight, Tag } from 'lucide-react';
 import StatusBadge from '../common/StatusBadge';
 import { formatDate } from '../../utils/formatters';
+import { getItemImage } from '../../utils/itemImageHelper';
 
 const ItemCard = ({ item, type = 'lost', claimable = false }) => {
   const isLost = type === 'lost' || item?.type === 'lost' || (item?.status && item.status.toLowerCase().includes('lost'));
@@ -11,7 +12,7 @@ const ItemCard = ({ item, type = 'lost', claimable = false }) => {
   const itemDesc = item?.description || item?.internalDescription || 'No description provided.';
   const itemLocation = item?.locationLost || item?.generalLocation || item?.location || 'Campus';
   const itemDate = item?.dateLost || item?.dateFound || item?.date;
-  const itemImg = (item?.images && item.images.length > 0) ? item.images[0] : (item?.image || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=800');
+  const itemImg = getItemImage(item);
 
   const detailLink = claimable
     ? `/student/claim/${itemId}`
@@ -29,7 +30,7 @@ const ItemCard = ({ item, type = 'lost', claimable = false }) => {
             alt={itemTitle}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=800';
+              e.target.src = getItemImage({ ...item, images: [] });
             }}
           />
           {/* Status badge floating top right */}

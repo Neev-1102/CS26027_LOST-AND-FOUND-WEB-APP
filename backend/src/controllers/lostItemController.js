@@ -3,6 +3,7 @@ import AuditLog from '../models/AuditLog.js';
 import { ApiError, asyncHandler } from '../utils/ApiError.js';
 import { sendNotification } from '../services/notificationService.js';
 import { findPossibleMatches } from '../services/matchingService.js';
+import { getDefaultItemImage } from '../utils/itemImageHelper.js';
 
 // @desc    Report a lost item
 // @route   POST /api/lost-items
@@ -12,6 +13,9 @@ export const createLostItem = asyncHandler(async (req, res) => {
   if (!itemName || !category || !description || !color || !dateLost || !locationLost) {
     throw new ApiError(400, 'Please complete all required fields (item name, category, description, color, date, location).');
   }
+
+  const defaultPhoto = getDefaultItemImage(itemName, category);
+  const resolvedImages = (images && images.length > 0) ? images : [defaultPhoto];
 
   const lostItem = await LostItem.create({
     reportedBy: req.user._id,
@@ -23,7 +27,7 @@ export const createLostItem = asyncHandler(async (req, res) => {
     dateLost,
     approximateTime: approximateTime || '',
     locationLost,
-    images: images || [],
+    images: resolvedImages,
     status: 'pending_review',
   });
 

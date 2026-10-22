@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
+import { getInitials } from '../../utils/userHelper';
 
 const Sidebar = ({ links = [], title = 'Portal Menu', roleBadge = 'Role' }) => {
   const { user, logout } = useAuth();
@@ -16,11 +17,9 @@ const Sidebar = ({ links = [], title = 'Portal Menu', roleBadge = 'Role' }) => {
     <aside className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm h-fit">
       {/* User Header */}
       <div className="flex items-center gap-3 p-3 mb-4 border-b border-slate-100">
-        <img
-          src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'}
-          alt={user?.name || 'User'}
-          className="w-11 h-11 rounded-full object-cover border-2 border-blue-500 shadow-sm"
-        />
+        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-extrabold text-sm flex items-center justify-center border-2 border-blue-500 shadow-sm shrink-0 tracking-wider">
+          {getInitials(user?.name)}
+        </div>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-slate-900 truncate">{user?.name || 'Campus User'}</h4>
           <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-50 text-blue-700 uppercase tracking-wider">

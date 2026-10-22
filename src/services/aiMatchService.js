@@ -44,89 +44,54 @@ export const aiMatchService = {
    * @param {Object} options - Search configuration or image metadata
    */
   async findAIMatches(itemId, options = {}) {
-    // Check if backend API URL is configured
-    if (import.meta.env.VITE_API_URL) {
-      try {
-        const response = await api.post('/ai-matches/search', { itemId, ...options });
-        return response.data;
-      } catch (err) {
-        console.warn('Backend AI service unavailable, falling back to mock engine:', err.message);
-      }
+    try {
+      const response = await api.post('/ai-matches/search', { itemId, ...options });
+      if (response.data?.matches) return response.data.matches;
+      if (Array.isArray(response.data)) return response.data;
+    } catch (err) {
+      console.warn('Backend AI match query error:', err.message);
     }
 
-    // Mock processing simulation
-    await new Promise((resolve) => setTimeout(resolve, 800));
     const allMatches = getStoredMatches();
-    
-    if (!itemId) {
-      return allMatches.slice(0, 8);
-    }
-
-    const matched = allMatches.filter(
-      (m) => m.lostItemId === itemId || m.foundItemId === itemId
-    );
-
+    if (!itemId) return allMatches.slice(0, 8);
+    const matched = allMatches.filter((m) => m.lostItemId === itemId || m.foundItemId === itemId);
     return matched.length > 0 ? matched : allMatches.slice(0, 4);
   },
 
-  /**
-   * Get single AI match analysis by ID
-   * @param {string} matchId
-   */
   async getAIMatch(matchId) {
-    if (import.meta.env.VITE_API_URL) {
-      try {
-        const response = await api.get(`/ai-matches/${matchId}`);
-        return response.data;
-      } catch (err) {
-        console.warn('Backend AI service unavailable, falling back to mock:', err.message);
-      }
+    try {
+      const response = await api.get(`/ai-matches/${matchId}`);
+      if (response.data?.match) return response.data.match;
+    } catch (err) {
+      console.warn('Backend AI match query error:', err.message);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
     const allMatches = getStoredMatches();
     const match = allMatches.find((m) => m.id === matchId);
-    if (!match) {
-      // Fallback return first item or construct simulated match
-      return allMatches[0] || null;
-    }
-    return match;
+    return match || allMatches[0] || null;
   },
 
-  /**
-   * Get matches specific to a lost item
-   * @param {string} lostItemId
-   */
   async getMatchesByLostItem(lostItemId) {
-    if (import.meta.env.VITE_API_URL) {
-      try {
-        const response = await api.get(`/ai-matches/lost/${lostItemId}`);
-        return response.data;
-      } catch (err) {
-        console.warn('Backend AI service unavailable, falling back to mock:', err.message);
-      }
+    try {
+      const response = await api.get(`/ai-matches/lost/${lostItemId}`);
+      if (response.data?.matches) return response.data.matches;
+    } catch (err) {
+      console.warn('Backend AI matches by lost item error:', err.message);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
     const allMatches = getStoredMatches();
     const results = allMatches.filter((m) => m.lostItemId === lostItemId);
     return results.length > 0 ? results : allMatches.slice(0, 3);
   },
 
-  /**
-   * Get AI scan and match history
-   */
   async getMatchHistory() {
-    if (import.meta.env.VITE_API_URL) {
-      try {
-        const response = await api.get('/ai-matches/history');
-        return response.data;
-      } catch (err) {
-        console.warn('Backend AI service unavailable, falling back to mock:', err.message);
-      }
+    try {
+      const response = await api.get('/ai-matches/history');
+      if (response.data?.matches) return response.data.matches;
+    } catch (err) {
+      console.warn('Backend AI match history error:', err.message);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
     return getStoredMatches();
   },
 

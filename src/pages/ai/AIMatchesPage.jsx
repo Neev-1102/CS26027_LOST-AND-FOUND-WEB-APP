@@ -60,11 +60,12 @@ const AIMatchesPage = () => {
       setMatches(allMatches || []);
 
       if (preselectedLostId) {
-        const found = (lostResult.items || []).find((i) => i.id === preselectedLostId);
+        const found = (lostResult.items || []).find(
+          (i) => (i._id || i.id).toString() === preselectedLostId.toString()
+        );
         if (found) {
           setSelectedLostItem(found);
-          setUploadedImage(found.image);
-          // Auto start analysis if navigated from lost item details
+          setUploadedImage(found.images?.[0] || found.image);
           setIsAnalyzing(true);
         }
       }
@@ -87,7 +88,8 @@ const AIMatchesPage = () => {
     setIsAnalyzing(false);
     setHasScanned(true);
 
-    const relevant = await aiMatchService.findAIMatches(selectedLostItem?.id);
+    const targetId = selectedLostItem?._id || selectedLostItem?.id;
+    const relevant = await aiMatchService.findAIMatches(targetId);
     setMatches(relevant);
     showSuccess('AI similarity search complete! Review suggested items below.');
   };
@@ -98,30 +100,35 @@ const AIMatchesPage = () => {
       setUploadedImage(null);
       return;
     }
-    const item = userLostItems.find((i) => i.id === itemId);
+    const item = userLostItems.find((i) => (i._id || i.id).toString() === itemId.toString());
     if (item) {
       setSelectedLostItem(item);
-      setUploadedImage(item.image);
+      setUploadedImage(item.images?.[0] || item.image);
     }
   };
 
   const handleClaim = (match) => {
-    // Construct found item format for ClaimModal
+    const foundItem = match.foundItem || {};
+    const claimId = match.foundItemId || foundItem._id || foundItem.id;
     setItemToClaim({
-      id: match.foundItemId,
-      title: match.foundItemTitle,
-      image: match.foundItemImage,
-      location: match.location,
-      date: match.dateFound,
-      category: match.category
+      id: claimId,
+      _id: claimId,
+      title: match.foundItemTitle || foundItem.internalItemName || foundItem.title,
+      image: match.foundItemImage || foundItem.images?.[0] || foundItem.image,
+      location: match.location || foundItem.generalLocation || foundItem.location,
+      date: match.dateFound || foundItem.dateFound || foundItem.date,
+      category: match.category || foundItem.category,
     });
     setClaimModalOpen(true);
   };
 
   // Filter matches
   const filteredMatches = matches.filter((m) => {
-    const matchCategory = selectedCategory === 'all' || m.category?.toLowerCase() === selectedCategory.toLowerCase();
-    const matchScore = (m.score || 0) >= minScore;
+    const foundItem = m.foundItem || {};
+    const cat = m.category || foundItem.category || '';
+    const matchCategory = selectedCategory === 'all' || cat.toLowerCase() === selectedCategory.toLowerCase();
+    const sc = m.score || m.matchScore || 85;
+    const matchScore = sc >= minScore;
     return matchCategory && matchScore;
   });
 
@@ -219,16 +226,19 @@ const AIMatchesPage = () => {
                         Quick Select From Existing Lost Reports:
                       </label>
                       <select
-                        value={selectedLostItem?.id || ''}
+                        value={selectedLostItem?._id || selectedLostItem?.id || ''}
                         onChange={(e) => handleSelectPredefinedLost(e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       >
                         <option value="">-- Or upload a new image below --</option>
-                        {userLostItems.map((item) => (
-                          <option key={item.id} value={item.id}>
-                            {item.title} ({item.category} • {item.location})
-                          </option>
-                        ))}
+                        {userLostItems.map((item) => {
+                          const id = item._id || item.id;
+                          return (
+                            <option key={id} value={id}>
+                              {item.itemName || item.title} ({item.category} • {item.locationLost || item.location})
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                   )}

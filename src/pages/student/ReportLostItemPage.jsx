@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { lostItemService } from '../../services/lostItemService';
 import { useToast } from '../../context/ToastContext';
 import { CATEGORIES, LOCATIONS } from '../../data/mockData';
+import { getDefaultItemImage } from '../../utils/itemImageHelper';
 import ItemImageUploader from '../../components/items/ItemImageUploader';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -39,9 +40,12 @@ const ReportLostItemPage = () => {
   const onSubmit = async (data) => {
     setSubmitting(true);
     try {
+      const defaultImg = getDefaultItemImage(data.itemName, data.category);
+      const chosenImages = (images && images.length > 0) ? images : [defaultImg];
       const payload = {
         ...data,
-        images,
+        images: chosenImages,
+        image: chosenImages[0],
       };
 
       const result = await lostItemService.create(payload);

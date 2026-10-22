@@ -260,7 +260,7 @@ export const INITIAL_LOST_ITEMS = [
     serialNumber: 'TI84-99120',
     status: 'Lost',
     description: 'Has small name initials "MJ" scratched lightly on the inside of the slide cover.',
-    image: 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?auto=format&fit=crop&q=80&w=800',
+    image: 'https://images.unsplash.com/photo-1516201580490-33550d32de5c?auto=format&fit=crop&q=80&w=800',
     reportedBy: { id: 'usr_6', name: 'Emily Davis', email: 'e.davis@campusfind.edu' },
     possibleMatchCount: 1,
     tags: ['calculator', 'ti-84', 'electronics', 'math']

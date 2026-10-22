@@ -5,6 +5,7 @@ import ClaimForm from '../../components/claims/ClaimForm';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import { ArrowLeft, ShieldCheck, MapPin, Calendar, Tag } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
+import { getItemImage } from '../../utils/itemImageHelper';
 
 const SubmitClaimPage = () => {
   const { id } = useParams();
@@ -59,7 +60,7 @@ const SubmitClaimPage = () => {
       {/* Item Summary Card */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col sm:flex-row gap-5 items-start">
         <img
-          src={item.images?.[0] || item.image || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?auto=format&fit=crop&q=80&w=800'}
+          src={getItemImage(item)}
           alt={item.internalItemName || item.title}
           className="w-full sm:w-36 h-36 rounded-2xl object-cover border border-slate-100 shrink-0"
         />

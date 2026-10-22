@@ -98,7 +98,7 @@ export const INITIAL_CLAIMS = [
     id: 'claim_6',
     itemId: 'found_7',
     itemTitle: 'Scientific Calculator TI-84 Plus CE',
-    itemImage: 'https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?auto=format&fit=crop&q=80&w=800',
+    itemImage: 'https://images.unsplash.com/photo-1516201580490-33550d32de5c?auto=format&fit=crop&q=80&w=800',
     claimant: {
       id: 'usr_6',
       name: 'Emily Davis',

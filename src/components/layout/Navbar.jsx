@@ -18,6 +18,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import Button from '../common/Button';
+import { getInitials } from '../../utils/userHelper';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -110,11 +111,9 @@ const Navbar = () => {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200"
                 >
-                  <img
-                    src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'}
-                    alt={user?.name || 'User'}
-                    className="w-9 h-9 rounded-xl object-cover ring-2 ring-blue-500/20"
-                  />
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-bold text-xs flex items-center justify-center ring-2 ring-blue-500/20 shadow-xs shrink-0">
+                    {getInitials(user?.name)}
+                  </div>
                   <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
                 </button>
 

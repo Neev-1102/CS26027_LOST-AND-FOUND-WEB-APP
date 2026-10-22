@@ -1,15 +1,66 @@
 export const INITIAL_USERS = [
   {
+    id: 'usr_student_demo',
+    _id: '6acc94046b31925188fdf83c',
+    name: 'Neev Patel',
+    email: 'student@charusat.edu.in',
+    password: 'student123',
+    role: 'student',
+    studentId: '24CS088',
+    collegeId: '24CS088',
+    phone: '+91 98765 43210',
+    department: 'Computer Engineering',
+    joinedDate: '2024-08-15',
+    status: 'Active',
+    accountStatus: 'active',
+    avatar: null
+  },
+  {
+    id: 'usr_staff_demo',
+    _id: '6acc94046b31925188fdf83d',
+    name: 'Prof. R. K. Patel (Staff Desk)',
+    email: 'staff@charusat.edu.in',
+    password: 'staff123',
+    role: 'staff',
+    studentId: 'STF-CHARUSAT-102',
+    collegeId: 'STF-CHARUSAT-102',
+    phone: '+91 98765 12345',
+    department: 'Campus Security & Lost Property Desk',
+    joinedDate: '2022-01-10',
+    status: 'Active',
+    accountStatus: 'active',
+    avatar: null
+  },
+  {
+    id: 'usr_admin_demo',
+    _id: '6acc94046b31925188fdf83e',
+    name: 'CHARUSAT Security Admin',
+    email: 'admin@charusat.edu.in',
+    password: 'admin123',
+    role: 'admin',
+    studentId: 'ADM-CHARUSAT-001',
+    collegeId: 'ADM-CHARUSAT-001',
+    phone: '+91 99000 88000',
+    department: 'Student Affairs & Campus Administration',
+    joinedDate: '2021-06-01',
+    status: 'Active',
+    accountStatus: 'active',
+    avatar: null
+  },
+  {
     id: 'usr_1',
     name: 'Alex Johnson',
     email: 'alex.johnson@campusfind.edu',
+    password: 'student123',
     role: 'student',
     studentId: 'STU-2024-8841',
+    collegeId: 'STU-2024-8841',
     phone: '+1 (555) 234-5678',
     department: 'Computer Science & Engineering',
     joinedDate: '2024-08-15',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
+    accountStatus: 'active',
+    avatar: null
   },
   {
     id: 'usr_2',
@@ -21,7 +72,7 @@ export const INITIAL_USERS = [
     department: 'Department of Electrical Engineering',
     joinedDate: '2022-01-10',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_3',
@@ -33,7 +84,7 @@ export const INITIAL_USERS = [
     department: 'Campus Safety & Property Custody',
     joinedDate: '2021-06-01',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_4',
@@ -45,7 +96,7 @@ export const INITIAL_USERS = [
     department: 'Information Technology',
     joinedDate: '2024-09-01',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_5',
@@ -57,7 +108,7 @@ export const INITIAL_USERS = [
     department: 'Mechanical Engineering',
     joinedDate: '2023-08-20',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_6',
@@ -69,7 +120,7 @@ export const INITIAL_USERS = [
     department: 'Business Administration',
     joinedDate: '2024-08-25',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_7',
@@ -81,7 +132,7 @@ export const INITIAL_USERS = [
     department: 'Chemical Engineering',
     joinedDate: '2023-01-15',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_8',
@@ -93,7 +144,7 @@ export const INITIAL_USERS = [
     department: 'Sports Management',
     joinedDate: '2022-09-05',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_9',
@@ -105,7 +156,7 @@ export const INITIAL_USERS = [
     department: 'Design & Architecture',
     joinedDate: '2024-08-10',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_10',
@@ -117,7 +168,7 @@ export const INITIAL_USERS = [
     department: 'Campus Dining Services',
     joinedDate: '2020-03-12',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_11',
@@ -129,7 +180,7 @@ export const INITIAL_USERS = [
     department: 'Central Library Services',
     joinedDate: '2019-11-01',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   },
   {
     id: 'usr_12',
@@ -141,6 +192,6 @@ export const INITIAL_USERS = [
     department: 'Department of Chemistry',
     joinedDate: '2021-07-20',
     status: 'Active',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300'
+    avatar: null
   }
 ];
